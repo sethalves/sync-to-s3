@@ -13,24 +13,6 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 |#
 
 
-
-;; #! /bin/bash
-;; #| -*- scheme -*-
-;; SOURCE="${BASH_SOURCE[0]}"
-;; while [ -h "$SOURCE" ]; do
-;;   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-;;   SOURCE="$(readlink "$SOURCE")"
-;;   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-;; done
-;; DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-;; X=/home/alves/chibi-scheme/chibi-scheme/lib
-;; export CHIBI_MODULE_PATH=/home/alves/chibi-scheme/lib
-;; export LD_LIBRARY_PATH='/home/alves/chibi-scheme:/home/alves/chibi-scheme/lib'
-;; exec /home/alves/chibi-scheme/chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
-;; |#
-
-
-
 (import (scheme base)
         (scheme read)
         (scheme write)
@@ -67,6 +49,12 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
          (list-prefix-equal? (cdr small-list) (cdr big-list)))
         (else #f)))
 
+
+(define (thin-backup-file-is-emacs-backup-file? tbf)
+  (let ((path (thin-backup-file-path tbf)))
+    (and (eq? (thin-backup-path-type path) 'normal)
+         (let ((path-last (last (thin-backup-path-path path))))
+           (string-suffix? "~" path-last)))))
 
 
 (define (sync-file-to-s3 credentials bucket
@@ -137,6 +125,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
                               (drop file-path-parts
                                     (length (snow-split-filename top))))))
         (cond ((snow-file-symbolic-link? local-filename) ;; skip symlinks
+               ((string-suffix? "~" local-filename) #f)
                (say-skipping-file "symbolic link" file-path-parts)
                #t)
               (else
