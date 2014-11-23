@@ -147,22 +147,22 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 (define options
   (list
    (option '(#\v "verbose") #f #f
-           (lambda (option name arg local-path bucket
+           (lambda (option name arg local-path remote-path bucket
                            verbose dry-run open-archives)
-             (values local-path bucket #t dry-run open-archives)))
+             (values local-path remote-path bucket #t dry-run open-archives)))
 
    (option '(#\n "dry-run") #f #f
-           (lambda (option name arg local-path bucket
+           (lambda (option name arg local-path remote-path bucket
                            verbose dry-run open-archives)
-             (values local-path bucket verbose #t open-archives)))
+             (values local-path remote-path bucket verbose #t open-archives)))
 
    (option '(#\o "open-archives") #f #f
-           (lambda (option name arg local-path bucket
+           (lambda (option name arg local-path remote-path bucket
                            verbose dry-run open-archives)
-             (values local-path bucket verbose dry-run #t)))
+             (values local-path remote-path bucket verbose dry-run #t)))
 
    (option '(#\h "help") #f #f
-           (lambda (option name arg local-path bucket
+           (lambda (option name arg local-path remote-path bucket
                            verbose dry-run open-archives)
              (usage "")))))
 
@@ -173,7 +173,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
     (newline (current-error-port))
     (display (car pargs) (current-error-port))
     (display " " (current-error-port))
-    (display "[arguments] local-path remote-path bucket-name\n"
+    (display "[arguments] local-path remote-path remote-path bucket-name\n"
              (current-error-port))
     (display "  -n --dry-run         " (current-error-port))
     (display "Don't make changes\n" (current-error-port))
