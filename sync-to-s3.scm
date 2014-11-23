@@ -170,10 +170,9 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 (define (usage msg)
   (let ((pargs (command-line)))
     (display msg (current-error-port))
-    (newline (current-error-port))
     (display (car pargs) (current-error-port))
     (display " " (current-error-port))
-    (display "[arguments] local-path remote-path remote-path bucket-name\n"
+    (display "[arguments] local-path remote-path bucket-name\n"
              (current-error-port))
     (display "  -n --dry-run         " (current-error-port))
     (display "Don't make changes\n" (current-error-port))
@@ -201,7 +200,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
          ;; operand (arguments that don't start with a hyphen)
          (lambda (operand local-path remote-path
                           bucket verbose dry-run open-archives)
-           (cond (bucket (usage "Too many non-optional arguments."))
+           (cond (bucket (usage "Too many non-optional arguments.\n\n"))
                  (remote-path
                   (values
                    local-path remote-path operand verbose dry-run open-archives))
@@ -228,7 +227,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 
     (cond ((or (not local-path) (not remote-path) (not bucket))
            (usage
-            "local-path and remote-path and bucket are required arguments.")))
+            "local-path and remote-path and bucket are required arguments.\n\n")))
 
     (let ((to-skip '(;; "/home/seth/tmp"
                      ;; "/home/seth/crypt"
