@@ -125,6 +125,10 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
                (say-skipping-file "emacs backup" file-path-parts)
                #t)
 
+              ((string-suffix? ".bak" local-filename)
+               (say-skipping-file "emacs backup" file-path-parts)
+               #t)
+
               (else
                (let* ((file-size (snow-file-size local-filename))
                       (file-md5 (filename->md5 local-filename)))
