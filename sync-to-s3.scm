@@ -80,7 +80,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
            (current-error-port)))
 
 
-(define (walk top bucket to-skip credentials dry-run)
+(define (walk top remote-path bucket to-skip credentials dry-run)
   (snow-directory-tree-walk
    top
 
@@ -119,8 +119,10 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 
       (let ((local-filename (snow-combine-filename-parts file-path-parts))
             (remote-filename (snow-combine-filename-parts
-                              (drop file-path-parts
-                                    (length (snow-split-filename top))))))
+                              (append
+                               remote-path
+                               (drop file-path-parts
+                                     (length (snow-split-filename top)))))))
         (cond ((snow-file-symbolic-link? local-filename) ;; skip symlinks
                (say-skipping-file "symbolic link" file-path-parts)
                #t)
@@ -168,9 +170,10 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 (define (usage msg)
   (let ((pargs (command-line)))
     (display msg (current-error-port))
+    (newline (current-error-port))
     (display (car pargs) (current-error-port))
     (display " " (current-error-port))
-    (display "[arguments] local-path bucket-name\n"
+    (display "[arguments] local-path remote-path bucket-name\n"
              (current-error-port))
     (display "  -n --dry-run         " (current-error-port))
     (display "Don't make changes\n" (current-error-port))
@@ -186,7 +189,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 
 (define (main-program)
   (let-values
-      (((local-path bucket verbose dry-run open-archives)
+      (((local-path remote-path bucket verbose dry-run open-archives)
         (args-fold
          (cdr (command-line))
          options
@@ -196,14 +199,20 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
                                  (if (string? name) name (string name))
                                  "\n\n")))
          ;; operand (arguments that don't start with a hyphen)
-         (lambda (operand local-path bucket verbose dry-run open-archives)
-           (cond ((and local-path bucket)
-                  (usage "Too many non-optional arguments."))
+         (lambda (operand local-path remote-path
+                          bucket verbose dry-run open-archives)
+           (cond (bucket (usage "Too many non-optional arguments."))
+                 (remote-path
+                  (values
+                   local-path remote-path operand verbose dry-run open-archives))
                  (local-path
-                  (values local-path operand verbose dry-run open-archives))
+                  (values local-path
+                          (snow-split-filename operand)
+                          #f verbose dry-run open-archives))
                  (else
-                  (values operand bucket verbose dry-run open-archives))))
+                  (values operand #f #f verbose dry-run open-archives))))
          #f ;; initial value of local-path
+         #f ;; initial value of remote-path
          #f ;; initial value of bucket
          #f ;; initial value of verbose
          #f ;; initial value of dry-run
@@ -212,12 +221,14 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
 
     (cond (verbose
            (display (format "local-path=~a\n" local-path))
+           (display (format "remote-path=~a\n" remote-path))
            (display (format "bucket=~a\n" bucket))
            (display (format "verbose=~a\n" verbose))
            (display (format "dry-run=~a\n" dry-run))))
 
-    (cond ((or (not local-path) (not bucket))
-           (usage "local-path and bucket are required arguments.")))
+    (cond ((or (not local-path) (not remote-path) (not bucket))
+           (usage
+            "local-path and remote-path and bucket are required arguments.")))
 
     (let ((to-skip '(;; "/home/seth/tmp"
                      ;; "/home/seth/crypt"
@@ -228,7 +239,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
       (if (not (bucket-exists? credentials bucket))
           (create-bucket! credentials bucket))
 
-      (walk local-path bucket (map snow-split-filename to-skip)
+      (walk local-path remote-path bucket (map snow-split-filename to-skip)
             credentials dry-run))))
 
 (main-program)
