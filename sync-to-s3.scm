@@ -50,13 +50,6 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
         (else #f)))
 
 
-(define (thin-backup-file-is-emacs-backup-file? tbf)
-  (let ((path (thin-backup-file-path tbf)))
-    (and (eq? (thin-backup-path-type path) 'normal)
-         (let ((path-last (last (thin-backup-path-path path))))
-           (string-suffix? "~" path-last)))))
-
-
 (define (sync-file-to-s3 credentials bucket
                          local-filename remote-filename
                          key/md5 tbf-size dry-run)
@@ -125,9 +118,13 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
                               (drop file-path-parts
                                     (length (snow-split-filename top))))))
         (cond ((snow-file-symbolic-link? local-filename) ;; skip symlinks
-               ((string-suffix? "~" local-filename) #f)
                (say-skipping-file "symbolic link" file-path-parts)
                #t)
+
+              ((string-suffix? "~" local-filename)
+               (say-skipping-file "emacs backup" file-path-parts)
+               #t)
+
               (else
                (let* ((file-size (snow-file-size local-filename))
                       (file-md5 (filename->md5 local-filename)))
