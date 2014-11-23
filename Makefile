@@ -15,14 +15,6 @@ SNOW2_LIBS='(srfi 13)' \
 	   '(seth port-extras)'
 
 all:
-
-link-libs:
-	snow2 install -s -r \
-		~/src/snow2/snow2-packages/snow \
-		-r ~/src/snow2/snow2-packages/seth \
-		$(SNOW2_LIBS)
-
-libs:
 	snow2 install $(SNOW2_LIBS)
 
 dist:
