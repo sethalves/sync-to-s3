@@ -59,7 +59,7 @@ CHIBI_MODULE_PATH="" exec chibi-scheme -A "$DIR" -A "$X" -A . -s "$0" "$@"
     (define (upload-file)
       (let* ((h (open-binary-input-file local-filename)))
         (put-object! credentials bucket remote-filename h tbf-size
-                     (if (string-suffix? ".html" remote-path)
+                     (if (string-suffix? ".html" remote-filename)
                          "text/html"
                          "application/octet-stream")
                      'public-read)
